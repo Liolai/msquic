@@ -11,6 +11,17 @@ Abstract:
 
 #include "PerfServer.h"
 
+#include <signal.h>
+static CXPLAT_EVENT* GlobalStopEvent = nullptr;
+
+static void
+SigIntHandler(int)
+{
+    if (GlobalStopEvent != nullptr) {
+        CxPlatEventSet(*GlobalStopEvent);
+    }
+}
+
 #ifdef QUIC_CLOG
 #include "PerfServer.cpp.clog.h"
 #endif
@@ -30,6 +41,7 @@ PerfServer::Init(
     }
 
     TryGetValue(argc, argv, "stats", &PrintStats);
+    TryGetValue(argc, argv, "once", &RunOnce);
 
     const char* LocalAddress = nullptr;
     uint16_t Port = 0;
@@ -161,7 +173,16 @@ PerfServer::Wait(
     if (Timeout > 0) {
         CxPlatEventWaitWithTimeout(*StopEvent, Timeout);
     } else {
+
+        GlobalStopEvent = StopEvent;
+        sighandler_t old_sigint = signal(SIGINT, SigIntHandler);
+        sighandler_t old_sigterm = signal(SIGTERM, SigIntHandler);
+
         CxPlatEventWaitForever(*StopEvent);
+
+        signal(SIGINT, old_sigint);
+        signal(SIGTERM, old_sigterm);
+        GlobalStopEvent = nullptr;
     }
     Registration.Shutdown(QUIC_CONNECTION_SHUTDOWN_FLAG_NONE, 0);
     return QUIC_STATUS_SUCCESS;
@@ -205,6 +226,14 @@ PerfServer::ListenerCallback(
             };
         MsQuic->SetCallbackHandler(Event->NEW_CONNECTION.Connection, (void*)Handler, this);
         Status = MsQuic->ConnectionSetConfiguration(Event->NEW_CONNECTION.Connection, Configuration);
+        if (QUIC_SUCCEEDED(Status)) {
+            if (!ActiveConnections){
+                ConnectionsStartTime = CxPlatTimeUs64();
+                RecvBytes = 0;
+                SendBytes = 0;
+            }
+            ActiveConnections++;
+        }
     }
     return Status;
 }
@@ -217,10 +246,36 @@ PerfServer::ConnectionCallback(
     switch (Event->Type) {
     case QUIC_CONNECTION_EVENT_SHUTDOWN_COMPLETE:
         if (!Event->SHUTDOWN_COMPLETE.AppCloseInProgress) {
+            ConnectionsEndTime = CxPlatTimeUs64();
             if (PrintStats) {
                 QuicPrintConnectionStatistics(MsQuic, ConnectionHandle);
             }
+
+            QUIC_STATISTICS_V2 Stats;
+            uint32_t StatsSize = sizeof(Stats);
+            MsQuic->GetParam(ConnectionHandle, QUIC_PARAM_CONN_STATISTICS_V2, &StatsSize, &Stats);
+
+            InterlockedExchangeAdd64((int64_t*)&RecvBytes, Stats.RecvTotalBytes);
+            InterlockedExchangeAdd64((int64_t*)&SendBytes, Stats.SendTotalBytes);
+
             MsQuic->ConnectionClose(ConnectionHandle);
+            ActiveConnections--;
+            if (!ActiveConnections ) {
+                if (PrintStats) {
+                    auto ElapsedMicroseconds = CxPlatTimeDiff64(ConnectionsStartTime, ConnectionsEndTime);
+                    WriteOutput("Elapsed Time: %u.%03u ms.\n", (uint32_t)(ElapsedMicroseconds / 1000), (uint32_t)(ElapsedMicroseconds % 1000));
+                    unsigned long long UploadRate = (SendBytes * 1000 * 1000 * 8) / (ElapsedMicroseconds * 1000);
+                    if (UploadRate) {
+                        WriteOutput("Result: Upload %llu kbps.\n", UploadRate);
+                    }
+                    unsigned long long DownloadRate = (RecvBytes * 1000 * 1000 * 8) / (ElapsedMicroseconds * 1000);
+                    if (DownloadRate) {
+                        WriteOutput("Result: Download %llu kbps.\n", DownloadRate);
+                    }
+                }
+                if (RunOnce) CxPlatEventSet(*StopEvent);
+            }
+
         }
         break;
     case QUIC_CONNECTION_EVENT_PEER_STREAM_STARTED: {

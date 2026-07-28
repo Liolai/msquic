@@ -188,6 +188,14 @@ private:
     QUIC_ADDR LocalAddr;
     CXPLAT_EVENT* StopEvent {nullptr};
     uint8_t PrintStats {FALSE};
+    uint8_t RunOnce {FALSE};
+    uint32_t ActiveConnections {0};
+    uint64_t ConnectionsStartTime {0};
+    uint64_t ConnectionsEndTime {0};
+    uint64_t RecvCount {0};
+    uint64_t RecvBytes {0};
+    uint64_t SendCount {0};
+    uint64_t SendBytes {0};
 
     TcpEngine Engine;
     TcpConfiguration TcpConfig;
