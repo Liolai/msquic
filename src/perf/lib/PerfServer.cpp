@@ -255,8 +255,8 @@ PerfServer::ConnectionCallback(
             uint32_t StatsSize = sizeof(Stats);
             MsQuic->GetParam(ConnectionHandle, QUIC_PARAM_CONN_STATISTICS_V2, &StatsSize, &Stats);
 
-            InterlockedExchangeAdd64((int64_t*)&RecvBytes, Stats.RecvTotalBytes);
-            InterlockedExchangeAdd64((int64_t*)&SendBytes, Stats.SendTotalBytes);
+            InterlockedExchangeAdd64((int64_t*)&RecvBytes, Stats.RecvTotalStreamBytes);
+            InterlockedExchangeAdd64((int64_t*)&SendBytes, Stats.SendTotalStreamBytes);
 
             MsQuic->ConnectionClose(ConnectionHandle);
             ActiveConnections--;
