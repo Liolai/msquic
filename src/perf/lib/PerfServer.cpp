@@ -372,7 +372,7 @@ PerfServer::StreamCallback(
     ) {
     switch (Event->Type) {
     case QUIC_STREAM_EVENT_RECEIVE:
-        InterlockedExchangeAdd64((int64_t*)&RecvBytes, Event->RECEIVE.TotalBufferLength);
+        Context->MeasuredBytesReceived += Event->RECEIVE.TotalBufferLength;
         if (!Context->ResponseSizeSet) {
             uint8_t* Dest = (uint8_t*)&Context->ResponseSize;
             uint64_t Offset = Event->RECEIVE.AbsoluteOffset;
@@ -389,7 +389,7 @@ PerfServer::StreamCallback(
         break;
     case QUIC_STREAM_EVENT_SEND_COMPLETE:
         if (!Event->SEND_COMPLETE.Canceled){
-            InterlockedExchangeAdd64((int64_t*)&SendBytes, ((QUIC_BUFFER*)Event->SEND_COMPLETE.ClientContext)->Length);
+            Context->MeasuredBytesSent += ((QUIC_BUFFER*)Event->SEND_COMPLETE.ClientContext)->Length;
         }
         Context->OutstandingBytes -= ((QUIC_BUFFER*)Event->SEND_COMPLETE.ClientContext)->Length;
         if (!Event->SEND_COMPLETE.Canceled) {
@@ -421,6 +421,8 @@ PerfServer::StreamCallback(
         MsQuic->StreamShutdown(StreamHandle, QUIC_STREAM_SHUTDOWN_FLAG_ABORT, 0);
         break;
     case QUIC_STREAM_EVENT_SHUTDOWN_COMPLETE:
+        InterlockedExchangeAdd64((int64_t*)&RecvBytes, Event->RECEIVE.TotalBufferLength);
+        InterlockedExchangeAdd64((int64_t*)&SendBytes, ((QUIC_BUFFER*)Event->SEND_COMPLETE.ClientContext)->Length);
         Context->InactivateAndRelease();
         break;
     case QUIC_STREAM_EVENT_IDEAL_SEND_BUFFER_SIZE:

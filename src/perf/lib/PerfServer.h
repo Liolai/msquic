@@ -279,4 +279,6 @@ struct StreamContext {
     CXPLAT_REF_COUNT RefCount;
     bool ConnectionClosing{ false };
     StreamContext* DelayNext{ nullptr }; // For use in the Delay worker queue
+    uint64_t MeasuredBytesSent{ 0 };
+    uint64_t MeasuredBytesReceived{ 0 };
 };
