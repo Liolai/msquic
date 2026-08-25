@@ -421,8 +421,8 @@ PerfServer::StreamCallback(
         MsQuic->StreamShutdown(StreamHandle, QUIC_STREAM_SHUTDOWN_FLAG_ABORT, 0);
         break;
     case QUIC_STREAM_EVENT_SHUTDOWN_COMPLETE:
-        InterlockedExchangeAdd64((int64_t*)&RecvBytes, Event->RECEIVE.TotalBufferLength);
-        InterlockedExchangeAdd64((int64_t*)&SendBytes, ((QUIC_BUFFER*)Event->SEND_COMPLETE.ClientContext)->Length);
+        InterlockedExchangeAdd64((int64_t*)&RecvBytes, Context->MeasuredBytesReceived);
+        InterlockedExchangeAdd64((int64_t*)&SendBytes, Context->MeasuredBytesSent);
         Context->InactivateAndRelease();
         break;
     case QUIC_STREAM_EVENT_IDEAL_SEND_BUFFER_SIZE:
