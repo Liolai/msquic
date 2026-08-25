@@ -165,9 +165,9 @@ typedef struct QUIC_PATH {
     //
     // Used on the server side until the client's IP address has been validated
     // to prevent the server from being used for amplification attacks. A value
-    // of UINT32_MAX indicates this variable does not apply.
+    // of UINT64_MAX indicates this variable does not apply.
     //
-    uint32_t Allowance;
+    uint64_t Allowance;
 
     //
     // The last path challenge we received and needs to be sent back as in a
@@ -227,7 +227,7 @@ void
 QuicPathSetAllowance(
     _In_ QUIC_CONNECTION* Connection,
     _In_ QUIC_PATH* Path,
-    _In_ uint32_t NewAllowance
+    _In_ uint64_t NewAllowance
     );
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
@@ -236,7 +236,7 @@ void
 QuicPathIncrementAllowance(
     _In_ QUIC_CONNECTION* Connection,
     _In_ QUIC_PATH* Path,
-    _In_ uint32_t Amount
+    _In_ uint64_t Amount
     )
 {
     QuicPathSetAllowance(Connection, Path, Path->Allowance + Amount);
@@ -248,7 +248,7 @@ void
 QuicPathDecrementAllowance(
     _In_ QUIC_CONNECTION* Connection,
     _In_ QUIC_PATH* Path,
-    _In_ uint32_t Amount
+    _In_ uint64_t Amount
     )
 {
     QuicPathSetAllowance(
