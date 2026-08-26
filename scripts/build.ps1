@@ -63,6 +63,9 @@ This script provides helpers for building msquic.
 .PARAMETER UseIoUring
     Enables io_uring support (Linux-only).
 
+.PARAMETER DisableUdpSegmentation
+    Disables Linux UDP GSO/UDP_SEGMENT support.
+
 .PARAMETER Generator
     Specifies a specific cmake generator (Only supported on unix)
 
@@ -182,6 +185,9 @@ param (
 
     [Parameter(Mandatory = $false)]
     [switch]$UseIoUring = $false,
+
+    [Parameter(Mandatory = $false)]
+    [switch]$DisableUdpSegmentation = $false,
 
     [Parameter(Mandatory = $false)]
     [string]$Generator = "",
@@ -487,6 +493,9 @@ function CMake-Generate {
     if ($UseIoUring) {
         $Arguments += " -DQUIC_LINUX_IOURING_ENABLED=on"
     }
+    if ($DisableUdpSegmentation) {
+        $Arguments += " -DQUIC_DISABLE_UDP_SEGMENT=on"
+    }
     if ($Platform -eq "uwp") {
         $Arguments += " -DCMAKE_SYSTEM_NAME=WindowsStore -DCMAKE_SYSTEM_VERSION=10.0 -DQUIC_UWP_BUILD=on"
     }
@@ -524,7 +533,7 @@ function CMake-Generate {
             $Arguments += " -DCMAKE_C_FLAGS=--coverage -DCMAKE_CXX_FLAGS=--coverage"
         } else {
             Write-Warning "-EnableGCov is only supported on Linux systems. Ignoring flag."
-        } 
+        }
     }
     if ($Platform -eq "android") {
         $NDK = $env:ANDROID_NDK_LATEST_HOME
