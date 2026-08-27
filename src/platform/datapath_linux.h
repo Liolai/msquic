@@ -13,6 +13,8 @@
 #include <linux/stddef.h>
 #include <netinet/udp.h>
 
+#undef UDP_SEGMENT
+
 //
 // The maximum single buffer size for single packet/datagram IO payloads.
 //
