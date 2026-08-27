@@ -637,9 +637,19 @@ CXPLAT_STATIC_ASSERT(
 #define QUIC_TP_FLAG_TIMESTAMP_SEND_ENABLED                 0x02000000
 #define QUIC_TP_FLAG_TIMESTAMP_SHIFT                        24
 
+#if defined(QUIC_DISABLE_RECEIVE_COALESCING) && defined(QUIC_DISABLE_SEND_SEGMENTATION)
+#pragma message("SET QUIC_TP_MAX_PACKET_SIZE_DEFAULT to common MTU")
+#define QUIC_TP_MAX_PACKET_SIZE_DEFAULT                     1500-20-8
+#else
 #define QUIC_TP_MAX_PACKET_SIZE_DEFAULT                     65527
+#endif
 #define QUIC_TP_MAX_UDP_PAYLOAD_SIZE_MIN                    1200
+#if defined(QUIC_DISABLE_RECEIVE_COALESCING) && defined(QUIC_DISABLE_SEND_SEGMENTATION)
+#pragma message("SET QUIC_TP_MAX_UDP_PAYLOAD_SIZE_MAX to common MTU")
+#define QUIC_TP_MAX_UDP_PAYLOAD_SIZE_MAX                    1500-20-8
+#else
 #define QUIC_TP_MAX_UDP_PAYLOAD_SIZE_MAX                    65527
+#endif
 
 #define QUIC_TP_ACK_DELAY_EXPONENT_DEFAULT                  3
 #define QUIC_TP_ACK_DELAY_EXPONENT_MAX                      20

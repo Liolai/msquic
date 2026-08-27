@@ -22,7 +22,12 @@
 // The maximum single buffer size for coalesced IO payloads.
 // Payload size: 65535 - 8 (UDP header) - 20 (IP header) = 65507 bytes.
 //
+#if defined(QUIC_DISABLE_RECEIVE_COALESCING) && defined(QUIC_DISABLE_SEND_SEGMENTATION)
+#define CXPLAT_LARGE_IO_BUFFER_SIZE         CXPLAT_SMALL_IO_BUFFER_SIZE
+#pragma message("SET CXPLAT_LARGE_IO_BUFFER_SIZE to CXPLAT_SMALL_IO_BUFFER_SIZE because QUIC_DISABLE_RECEIVE_COALESCING and QUIC_DISABLE_SEND_SEGMENTATION are defined.")
+#else
 #define CXPLAT_LARGE_IO_BUFFER_SIZE         0xFFE3
+#endif
 
 //
 // The maximum batch size of IOs in that can use a single coalesced IO buffer.
