@@ -13,13 +13,6 @@
 #include <linux/stddef.h>
 #include <netinet/udp.h>
 
-#ifdef UDP_SEGMENT
-    #ifdef QUIC_DISABLE_UDP_SEGMENT
-        #pragma message("UDP_SEGMENT disabled manually.")
-        #undef UDP_SEGMENT
-    #endif
-#endif
-
 //
 // The maximum single buffer size for single packet/datagram IO payloads.
 //
