@@ -324,6 +324,7 @@ else()
 
         check_symbol_exists(UDP_SEGMENT netinet/udp.h HAS_UDP_SEGMENT)
         if (QUIC_DISABLE_UDP_SEGMENT)
+            message(STATUS "Disabling UDP_SEGMENT")
             set(HAS_UDP_SEGMENT FALSE)
         endif()
         if (NOT HAS_UDP_SEGMENT)
@@ -381,6 +382,9 @@ else()
     endif()
     if (HAS_SYSCTL)
          list(APPEND QUIC_COMMON_DEFINES HAS_SYSCTL)
+    endif()
+    if (QUIC_DISABLE_UDP_SEGMENT)
+        list(APPEND QUIC_COMMON_DEFINES QUIC_DISABLE_UDP_SEGMENT)
     endif()
     set(QUIC_WARNING_FLAGS -Werror -Wall -Wextra -Wformat=2 -Wno-type-limits
         -Wno-unknown-pragmas -Wno-multichar -Wno-missing-field-initializers
@@ -1042,3 +1046,5 @@ if(QUIC_BUILD_TEST)
     add_subdirectory(src/test/lib)
     add_subdirectory(src/test/bin)
 endif()
+
+message("QUIC_COMMON_DEFINES: ${QUIC_COMMON_DEFINES}")
