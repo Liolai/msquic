@@ -747,6 +747,32 @@ PerfClientConnection::ConnectionCallback(
     _Inout_ QUIC_CONNECTION_EVENT* Event
     ) {
     switch (Event->Type) {
+        case QUIC_CONNECTION_EVENT_CONNECTED:
+            WriteOutput("EVENT_CONNECTED\n");
+            break;
+        case QUIC_CONNECTION_EVENT_SHUTDOWN_COMPLETE:
+            WriteOutput("EVENT_SHUTDOWN_COMPLETE\n");
+            break;
+        case QUIC_CONNECTION_EVENT_PEER_STREAM_STARTED:
+            WriteOutput("EVENT_PEER_STREAM_STARTED\n");
+            break;
+        case QUIC_CONNECTION_EVENT_IDEAL_PROCESSOR_CHANGED:
+            WriteOutput("EVENT_IDEAL_PROCESSOR_CHANGED\n");
+            break;
+        case QUIC_CONNECTION_EVENT_ONE_WAY_DELAY_NEGOTIATED:
+            WriteOutput("EVENT_ONE_WAY_DELAY_NEGOTIATED\n");
+            break;
+        case QUIC_CONNECTION_EVENT_SHUTDOWN_INITIATED_BY_PEER:
+            WriteOutput("EVENT_SHUTDOWN_INITIATED_BY_PEER\n");
+            break;
+        default:
+            WriteOutput("Event: %u\n", Event->Type);
+            break;
+    }
+    QUIC_NETWORK_STATISTICS stats = Event->NETWORK_STATISTICS;
+    WriteOutput("Bandwidth: %lu, BytesInFlight: %u, CongestionWindow: %u, IdealBytes: %lu, PostedBytes: %lu, SmoothedRTT: %lu\n", stats.Bandwidth,stats.BytesInFlight,stats.CongestionWindow,stats.IdealBytes,stats.PostedBytes,stats.SmoothedRTT);
+
+    switch (Event->Type) {
     case QUIC_CONNECTION_EVENT_CONNECTED:
         OnHandshakeComplete();
         break;
